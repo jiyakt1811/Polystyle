@@ -7,6 +7,7 @@ import 'mind_screen.dart';
 import 'food_log_screen.dart';
 import 'exercise_log_screen.dart';
 import 'mood_log_screen.dart';
+import 'period_tracker_screen.dart';
 import '../widgets/affirmations_popup.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -185,37 +186,127 @@ class DashboardHome extends StatelessWidget {
               
               const SizedBox(height: 24),
               
-              // Recent articles
-              Text(
-                'Recent Articles',
-                style: AppTheme.headingStyle.copyWith(fontSize: 20),
+              // Period Tracker Section
+              Row(
+                children: [
+                  Text(
+                    'Period Tracker',
+                    style: AppTheme.headingStyle.copyWith(fontSize: 20),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const PeriodTrackerScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'View All',
+                      style: AppTheme.bodyStyle.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               
               const SizedBox(height: 16),
               
-              _buildArticleCard(
-                title: 'Understanding PCOD: A Complete Guide',
-                description: 'Learn about the causes, symptoms, and management strategies for PCOD.',
-                image: 'https://picsum.photos/80/80?random=1',
-                readTime: '5 min read',
+              // Period Overview Card
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: AppTheme.primaryColor,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'This Month',
+                            style: AppTheme.bodyStyle.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildPeriodStatCard(
+                              title: 'Last Period',
+                              value: '25/11/2024',
+                              icon: Icons.event,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildPeriodStatCard(
+                              title: 'Cycle Length',
+                              value: '28 days',
+                              icon: Icons.timeline,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildPeriodStatCard(
+                              title: 'Next Expected',
+                              value: '23/12/2024',
+                              icon: Icons.schedule,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildPeriodStatCard(
+                              title: 'Days Until',
+                              value: '12 days',
+                              icon: Icons.timer,
+                              color: Colors.purple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Recent Period Logs Preview
+              _buildPeriodLogPreviewCard(
+                date: '19/11/2024 - 25/11/2024',
+                flow: 'Medium',
+                symptoms: ['Cramps', 'Fatigue'],
               ),
               
               const SizedBox(height: 12),
               
-              _buildArticleCard(
-                title: 'Nutrition Tips for PCOD Management',
-                description: 'Discover the best foods to include and avoid in your PCOD diet.',
-                image: 'https://picsum.photos/80/80?random=2',
-                readTime: '3 min read',
-              ),
-              
-              const SizedBox(height: 12),
-              
-              _buildArticleCard(
-                title: 'Exercise Routines for PCOD',
-                description: 'Effective workout plans designed specifically for women with PCOD.',
-                image: 'https://picsum.photos/80/80?random=3',
-                readTime: '4 min read',
+              _buildPeriodLogPreviewCard(
+                date: '22/10/2024 - 28/10/2024',
+                flow: 'Heavy',
+                symptoms: ['Cramps', 'Bloating', 'Mood swings'],
               ),
               
               const SizedBox(height: 24),
@@ -402,62 +493,7 @@ class DashboardHome extends StatelessWidget {
     );
   }
 
-  Widget _buildArticleCard({
-    required String title,
-    required String description,
-    required String image,
-    required String readTime,
-  }) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                image,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTheme.bodyStyle.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: AppTheme.bodyStyle.copyWith(
-                      color: AppTheme.lightTextColor,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    readTime,
-                    style: AppTheme.bodyStyle.copyWith(
-                      color: AppTheme.primaryColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildQACard({
     required String question,
@@ -550,5 +586,131 @@ class DashboardHome extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildPeriodStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            title,
+            style: AppTheme.bodyStyle.copyWith(
+              fontSize: 10,
+              color: AppTheme.lightTextColor,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppTheme.bodyStyle.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodLogPreviewCard({
+    required String date,
+    required String flow,
+    required List<String> symptoms,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.event,
+                  color: AppTheme.primaryColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  date,
+                  style: AppTheme.bodyStyle.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _getFlowColor(flow).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    flow,
+                    style: AppTheme.bodyStyle.copyWith(
+                      color: _getFlowColor(flow),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            if (symptoms.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                children: symptoms.map((symptom) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    symptom,
+                    style: AppTheme.bodyStyle.copyWith(
+                      color: Colors.orange,
+                      fontSize: 10,
+                    ),
+                  ),
+                )).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getFlowColor(String flow) {
+    switch (flow.toLowerCase()) {
+      case 'light':
+        return Colors.green;
+      case 'medium':
+        return Colors.orange;
+      case 'heavy':
+        return Colors.red;
+      default:
+        return AppTheme.primaryColor;
+    }
   }
 } 
