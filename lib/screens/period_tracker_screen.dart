@@ -532,6 +532,10 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
                           if (date != null) {
                             setState(() {
                               _selectedStartDate = date;
+                              // Reset end date if it's before the new start date
+                              if (_selectedEndDate != null && _selectedEndDate!.isBefore(date)) {
+                                _selectedEndDate = null;
+                              }
                             });
                           }
                         },
@@ -577,10 +581,21 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: () async {
+                          // Ensure we have a valid start date first
+                          if (_selectedStartDate == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please select a start date first'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                            return;
+                          }
+                          
                           final date = await showDatePicker(
                             context: context,
-                            initialDate: _selectedStartDate ?? DateTime.now(),
-                            firstDate: _selectedStartDate ?? DateTime.now().subtract(const Duration(days: 365)),
+                            initialDate: _selectedStartDate!,
+                            firstDate: _selectedStartDate!,
                             lastDate: DateTime.now(),
                           );
                           if (date != null) {
@@ -592,31 +607,74 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
+                            border: Border.all(
+                              color: _selectedStartDate == null 
+                                  ? Colors.grey.shade200 
+                                  : Colors.grey.shade300,
+                            ),
                             borderRadius: BorderRadius.circular(8),
+                            color: _selectedStartDate == null 
+                                ? Colors.grey.shade50 
+                                : Colors.white,
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.calendar_today,
-                                color: AppTheme.primaryColor,
+                                color: _selectedStartDate == null 
+                                    ? Colors.grey.shade400 
+                                    : AppTheme.primaryColor,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 _selectedEndDate != null
                                     ? _formatDate(_selectedEndDate!)
-                                    : 'Select end date',
+                                    : _selectedStartDate == null
+                                        ? 'Select start date first'
+                                        : 'Select end date',
                                 style: AppTheme.bodyStyle.copyWith(
                                   color: _selectedEndDate != null
                                       ? AppTheme.textColor
-                                      : AppTheme.lightTextColor,
+                                      : _selectedStartDate == null
+                                          ? Colors.grey.shade400
+                                          : AppTheme.lightTextColor,
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
+                      
+                      // Show duration if both dates are selected
+                      if (_selectedStartDate != null && _selectedEndDate != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: AppTheme.primaryColor,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Duration: ${_calculateDuration(_selectedStartDate!, _selectedEndDate!)} days',
+                                style: AppTheme.bodyStyle.copyWith(
+                                  color: AppTheme.primaryColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       
                       const SizedBox(height: 16),
                       
@@ -830,6 +888,10 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  int _calculateDuration(DateTime startDate, DateTime endDate) {
+    return endDate.difference(startDate).inDays + 1; // +1 to include both start and end dates
   }
 
   int _calculateAverageCycleLength() {
