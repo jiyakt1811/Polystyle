@@ -9,6 +9,9 @@ class PeriodTrackerScreen extends StatefulWidget {
 }
 
 class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _notesController = TextEditingController();
+  
   final List<PeriodLog> _periodLogs = [
     PeriodLog(
       startDate: DateTime.now().subtract(const Duration(days: 25)),
@@ -70,6 +73,40 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
       notes: 'Felt strong during workout',
     ),
   ];
+
+  // Period logging variables
+  DateTime? _selectedStartDate;
+  DateTime? _selectedEndDate;
+  String _selectedFlow = 'Medium';
+  final List<String> _selectedSymptoms = [];
+  bool _isLoading = false;
+
+  final List<String> _flowOptions = [
+    'Light',
+    'Medium',
+    'Heavy',
+  ];
+
+  final List<String> _symptomOptions = [
+    'Cramps',
+    'Fatigue',
+    'Bloating',
+    'Mood swings',
+    'Headache',
+    'Back pain',
+    'Breast tenderness',
+    'Acne',
+    'Food cravings',
+    'Insomnia',
+    'Anxiety',
+    'Depression',
+  ];
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -445,13 +482,350 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
   }
 
   void _showAddPeriodLogDialog() {
-    // TODO: Implement add period log dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add period log feature coming soon!'),
-        backgroundColor: Colors.blue,
-      ),
+    _selectedStartDate = null;
+    _selectedEndDate = null;
+    _selectedFlow = 'Medium';
+    _selectedSymptoms.clear();
+    _notesController.clear();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.add_circle,
+                    color: AppTheme.primaryColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Log New Period'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Start Date
+                      Text(
+                        'Start Date *',
+                        style: AppTheme.bodyStyle.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                            lastDate: DateTime.now(),
+                          );
+                          if (date != null) {
+                            setState(() {
+                              _selectedStartDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: AppTheme.primaryColor,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _selectedStartDate != null
+                                    ? _formatDate(_selectedStartDate!)
+                                    : 'Select start date',
+                                style: AppTheme.bodyStyle.copyWith(
+                                  color: _selectedStartDate != null
+                                      ? AppTheme.textColor
+                                      : AppTheme.lightTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // End Date
+                      Text(
+                        'End Date *',
+                        style: AppTheme.bodyStyle.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedStartDate ?? DateTime.now(),
+                            firstDate: _selectedStartDate ?? DateTime.now().subtract(const Duration(days: 365)),
+                            lastDate: DateTime.now(),
+                          );
+                          if (date != null) {
+                            setState(() {
+                              _selectedEndDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: AppTheme.primaryColor,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _selectedEndDate != null
+                                    ? _formatDate(_selectedEndDate!)
+                                    : 'Select end date',
+                                style: AppTheme.bodyStyle.copyWith(
+                                  color: _selectedEndDate != null
+                                      ? AppTheme.textColor
+                                      : AppTheme.lightTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Flow
+                      Text(
+                        'Flow *',
+                        style: AppTheme.bodyStyle.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _selectedFlow,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        items: _flowOptions.map((flow) {
+                          return DropdownMenuItem(
+                            value: flow,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: _getFlowColor(flow),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(flow),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedFlow = value!;
+                          });
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Symptoms
+                      Text(
+                        'Symptoms',
+                        style: AppTheme.bodyStyle.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: _symptomOptions.map((symptom) {
+                          final isSelected = _selectedSymptoms.contains(symptom);
+                          return FilterChip(
+                            label: Text(symptom),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedSymptoms.add(symptom);
+                                } else {
+                                  _selectedSymptoms.remove(symptom);
+                                }
+                              });
+                            },
+                            selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+                            checkmarkColor: AppTheme.primaryColor,
+                          );
+                        }).toList(),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Notes
+                      Text(
+                        'Notes (Optional)',
+                        style: AppTheme.bodyStyle.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _notesController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Any additional notes about your period...',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : () {
+                    _savePeriodLog(setState);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
+  }
+
+  Future<void> _savePeriodLog(StateSetter setDialogState) async {
+    if (_selectedStartDate == null || _selectedEndDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select both start and end dates'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedEndDate!.isBefore(_selectedStartDate!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('End date cannot be before start date'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setDialogState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // TODO: Save to Firebase
+      // await FirebaseService.savePeriodLog({
+      //   'startDate': _selectedStartDate!.toIso8601String(),
+      //   'endDate': _selectedEndDate!.toIso8601String(),
+      //   'flow': _selectedFlow,
+      //   'symptoms': _selectedSymptoms,
+      //   'notes': _notesController.text,
+      //   'userId': AuthService.currentUser?.id,
+      //   'timestamp': DateTime.now().toIso8601String(),
+      // });
+
+      // Add to local list
+      final newLog = PeriodLog(
+        startDate: _selectedStartDate!,
+        endDate: _selectedEndDate!,
+        flow: _selectedFlow,
+        symptoms: List.from(_selectedSymptoms),
+        notes: _notesController.text,
+      );
+
+      setState(() {
+        _periodLogs.insert(0, newLog);
+      });
+
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Period logged successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setDialogState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   String _formatDate(DateTime date) {
