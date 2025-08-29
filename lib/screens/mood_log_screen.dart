@@ -11,12 +11,17 @@ class MoodLogScreen extends StatefulWidget {
 class _MoodLogScreenState extends State<MoodLogScreen> {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
+  final _journalController = TextEditingController();
   
   String _selectedMood = 'Happy';
   String _selectedEnergyLevel = 'Moderate';
   String _selectedStressLevel = 'Low';
+  String _selectedJournalTime = 'Morning';
   DateTime _selectedTime = DateTime.now();
   bool _isLoading = false;
+  
+  // Journal answers
+  final Map<String, String> _journalAnswers = {};
 
   final List<String> _moods = [
     'Happy',
@@ -49,9 +54,89 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
     'Very High',
   ];
 
+  final List<String> _journalTimes = [
+    'Morning',
+    'Night',
+  ];
+
+  // Morning journal questions
+  final List<JournalQuestion> _morningQuestions = [
+    JournalQuestion(
+      id: 'morning_1',
+      question: 'How did you sleep last night?',
+      options: [
+        'Very well (8+ hours)',
+        'Good (6-7 hours)',
+        'Fair (5-6 hours)',
+        'Poor (less than 5 hours)',
+        'Other',
+      ],
+    ),
+    JournalQuestion(
+      id: 'morning_2',
+      question: 'What\'s your energy level this morning?',
+      options: [
+        'Very energetic',
+        'Moderately energetic',
+        'A bit tired',
+        'Very tired',
+        'Other',
+      ],
+    ),
+    JournalQuestion(
+      id: 'morning_3',
+      question: 'What\'s your main focus for today?',
+      options: [
+        'Work/Study',
+        'Self-care',
+        'Exercise',
+        'Social activities',
+        'Other',
+      ],
+    ),
+  ];
+
+  // Night journal questions
+  final List<JournalQuestion> _nightQuestions = [
+    JournalQuestion(
+      id: 'night_1',
+      question: 'How productive was your day?',
+      options: [
+        'Very productive',
+        'Moderately productive',
+        'Somewhat productive',
+        'Not very productive',
+        'Other',
+      ],
+    ),
+    JournalQuestion(
+      id: 'night_2',
+      question: 'What was the highlight of your day?',
+      options: [
+        'Work/Study achievement',
+        'Personal time',
+        'Social interaction',
+        'Exercise/Activity',
+        'Other',
+      ],
+    ),
+    JournalQuestion(
+      id: 'night_3',
+      question: 'What are you grateful for today?',
+      options: [
+        'Health and wellness',
+        'Relationships',
+        'Personal growth',
+        'Simple pleasures',
+        'Other',
+      ],
+    ),
+  ];
+
   @override
   void dispose() {
     _notesController.dispose();
+    _journalController.dispose();
     super.dispose();
   }
 
@@ -91,6 +176,8 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       //   'stressLevel': _selectedStressLevel,
       //   'time': _selectedTime.toIso8601String(),
       //   'notes': _notesController.text,
+      //   'journalTime': _selectedJournalTime,
+      //   'journalAnswers': _journalAnswers,
       //   'userId': AuthService.currentUser?.id,
       //   'timestamp': DateTime.now().toIso8601String(),
       // });
@@ -98,7 +185,7 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Mood logged successfully!'),
+            content: const Text('Mood and journal logged successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -370,6 +457,63 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
                   ),
                 ),
                 
+                const SizedBox(height: 24),
+                
+                // Journaling Section
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.edit_note,
+                              color: AppTheme.primaryColor,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Daily Journaling',
+                              style: AppTheme.headingStyle.copyWith(fontSize: 18),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Journal time selection
+                        DropdownButtonFormField<String>(
+                          value: _selectedJournalTime,
+                          decoration: const InputDecoration(
+                            labelText: 'Journal Time',
+                            prefixIcon: Icon(Icons.access_time),
+                          ),
+                          items: _journalTimes.map((time) {
+                            return DropdownMenuItem(
+                              value: time,
+                              child: Text(time),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedJournalTime = value!;
+                              _journalAnswers.clear();
+                            });
+                          },
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Journal questions
+                        ...(_selectedJournalTime == 'Morning' ? _morningQuestions : _nightQuestions)
+                            .map((question) => _buildJournalQuestion(question)),
+                      ],
+                    ),
+                  ),
+                ),
+                
                 const SizedBox(height: 32),
                 
                 // Save Button
@@ -509,4 +653,76 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       ],
     );
   }
+
+  Widget _buildJournalQuestion(JournalQuestion question) {
+    final currentAnswer = _journalAnswers[question.id] ?? '';
+    final showCustomInput = currentAnswer == 'Other' || 
+        (currentAnswer.isNotEmpty && !question.options.contains(currentAnswer));
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            question.question,
+            style: AppTheme.bodyStyle.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Options
+          ...question.options.map((option) => RadioListTile<String>(
+            title: Text(option),
+            value: option,
+            groupValue: currentAnswer.isEmpty ? null : currentAnswer,
+            onChanged: (value) {
+              setState(() {
+                if (value == 'Other') {
+                  _journalAnswers[question.id] = 'Other';
+                } else {
+                  _journalAnswers[question.id] = value!;
+                }
+              });
+            },
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          )),
+          
+          // Custom input for "Other" option
+          if (showCustomInput) ...[
+            const SizedBox(height: 8),
+            TextFormField(
+              initialValue: currentAnswer == 'Other' ? '' : currentAnswer,
+              decoration: const InputDecoration(
+                labelText: 'Your answer',
+                hintText: 'Type your own answer...',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _journalAnswers[question.id] = value;
+                });
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class JournalQuestion {
+  final String id;
+  final String question;
+  final List<String> options;
+
+  JournalQuestion({
+    required this.id,
+    required this.question,
+    required this.options,
+  });
 }

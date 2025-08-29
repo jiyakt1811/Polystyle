@@ -5,10 +5,10 @@ class AffirmationsPopup extends StatefulWidget {
   const AffirmationsPopup({super.key});
 
   @override
-  State<AffirmationsPopup> createState() => _AffirmationsPopupState();
+  AffirmationsPopupState createState() => AffirmationsPopupState();
 }
 
-class _AffirmationsPopupState extends State<AffirmationsPopup>
+class AffirmationsPopupState extends State<AffirmationsPopup>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;

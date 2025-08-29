@@ -535,21 +535,7 @@ class _BodyScreenState extends State<BodyScreen> {
     }
   }
 
-  void _showAddExerciseDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Exercise'),
-        content: const Text('Exercise logging feature coming soon!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showWorkoutGenerator() {
     showDialog(

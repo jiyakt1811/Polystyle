@@ -423,21 +423,7 @@ class _FoodScreenState extends State<FoodScreen> {
     return Colors.red;
   }
 
-  void _showAddFoodDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Food Item'),
-        content: const Text('Food logging feature coming soon!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showDetailedAnalysis() {
     showDialog(

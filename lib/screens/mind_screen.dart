@@ -42,9 +42,9 @@ class _MindScreenState extends State<MindScreen> {
       body: Stack(
         children: [
           SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Mood tracking
@@ -369,9 +369,8 @@ class _MindScreenState extends State<MindScreen> {
             ],
           ),
         ),
-          AffirmationsPopup(key: _affirmationsKey),
-        ],
-      ),
+        AffirmationsPopup(key: _affirmationsKey),
+      ],
     );
   }
 
@@ -581,21 +580,7 @@ class _MindScreenState extends State<MindScreen> {
 
 
 
-  void _showJournalDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('New Journal Entry'),
-        content: const Text('Journaling feature coming soon!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _logSleep() {
     showDialog(

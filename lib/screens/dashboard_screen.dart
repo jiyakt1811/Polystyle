@@ -19,14 +19,20 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   final AuthService _authService = AuthService();
-  final GlobalKey<AffirmationsPopupState> _affirmationsKey = GlobalKey<AffirmationsPopupState>();
+  late final GlobalKey<AffirmationsPopupState> _affirmationsKey;
+  late final List<Widget> _screens;
 
-  final List<Widget> _screens = [
-    const DashboardHome(),
-    const FoodScreen(),
-    const BodyScreen(),
-    const MindScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _affirmationsKey = GlobalKey<AffirmationsPopupState>();
+    _screens = [
+      DashboardHome(affirmationsKey: _affirmationsKey),
+      const FoodScreen(),
+      const BodyScreen(),
+      const MindScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +81,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class DashboardHome extends StatelessWidget {
-  const DashboardHome({super.key});
+  final GlobalKey<AffirmationsPopupState> affirmationsKey;
+  
+  const DashboardHome({super.key, required this.affirmationsKey});
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +248,7 @@ class DashboardHome extends StatelessWidget {
               Card(
                 child: InkWell(
                   onTap: () {
-                    _affirmationsKey.currentState?.showAffirmation();
+                    affirmationsKey.currentState?.showAffirmation();
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
