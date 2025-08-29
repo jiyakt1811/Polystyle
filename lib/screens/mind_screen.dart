@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'mood_log_screen.dart';
-import '../widgets/affirmations_popup.dart';
 
 class MindScreen extends StatefulWidget {
   const MindScreen({super.key});
@@ -13,7 +12,6 @@ class MindScreen extends StatefulWidget {
 class _MindScreenState extends State<MindScreen> {
   String _currentMood = 'Happy';
   final List<String> _moods = ['Happy', 'Calm', 'Stressed', 'Anxious', 'Energetic', 'Tired'];
-  final GlobalKey<AffirmationsPopupState> _affirmationsKey = GlobalKey<AffirmationsPopupState>();
   final List<JournalEntry> _journalEntries = [
     JournalEntry(
       date: DateTime.now().subtract(const Duration(days: 1)),
@@ -39,12 +37,10 @@ class _MindScreenState extends State<MindScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textColor),
       ),
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Mood tracking
@@ -110,7 +106,7 @@ class _MindScreenState extends State<MindScreen> {
               Card(
                 child: InkWell(
                   onTap: () {
-                    _affirmationsKey.currentState?.showAffirmation();
+                    // TODO: Add affirmations popup
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
@@ -369,8 +365,7 @@ class _MindScreenState extends State<MindScreen> {
             ],
           ),
         ),
-        AffirmationsPopup(key: _affirmationsKey),
-      ],
+      ),
     );
   }
 
