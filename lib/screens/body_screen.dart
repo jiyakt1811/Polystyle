@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'exercise_log_screen.dart';
 
 class BodyScreen extends StatefulWidget {
   const BodyScreen({super.key});
@@ -89,7 +90,11 @@ class _BodyScreenState extends State<BodyScreen> {
                   ),
                   ElevatedButton.icon(
                     onPressed: () {
-                      _showAddExerciseDialog();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ExerciseLogScreen(),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Add Exercise'),

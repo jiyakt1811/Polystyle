@@ -4,6 +4,10 @@ import '../services/auth_service.dart';
 import 'food_screen.dart';
 import 'body_screen.dart';
 import 'mind_screen.dart';
+import 'food_log_screen.dart';
+import 'exercise_log_screen.dart';
+import 'mood_log_screen.dart';
+import '../widgets/affirmations_popup.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -15,6 +19,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
   final AuthService _authService = AuthService();
+  final GlobalKey<AffirmationsPopupState> _affirmationsKey = GlobalKey<AffirmationsPopupState>();
 
   final List<Widget> _screens = [
     const DashboardHome(),
@@ -29,7 +34,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
-      body: _screens[_selectedIndex],
+      body: Stack(
+        children: [
+          _screens[_selectedIndex],
+          AffirmationsPopup(key: _affirmationsKey),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
@@ -226,6 +236,65 @@ class DashboardHome extends StatelessWidget {
               
               const SizedBox(height: 24),
               
+              // Affirmations button
+              Card(
+                child: InkWell(
+                  onTap: () {
+                    _affirmationsKey.currentState?.showAffirmation();
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Icon(
+                            Icons.favorite,
+                            color: AppTheme.primaryColor,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Daily Affirmation',
+                                style: AppTheme.bodyStyle.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                'Get your daily dose of positivity',
+                                style: AppTheme.bodyStyle.copyWith(
+                                  color: AppTheme.lightTextColor,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppTheme.lightTextColor,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
               // Quick actions
               Text(
                 'Quick Actions',
@@ -242,7 +311,11 @@ class DashboardHome extends StatelessWidget {
                       title: 'Log Food',
                       color: Color(0xFF4CAF50),
                       onTap: () {
-                        // Navigate to food logging
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const FoodLogScreen(),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -253,7 +326,11 @@ class DashboardHome extends StatelessWidget {
                       title: 'Log Exercise',
                       color: Color(0xFF2196F3),
                       onTap: () {
-                        // Navigate to exercise logging
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const ExerciseLogScreen(),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -264,7 +341,11 @@ class DashboardHome extends StatelessWidget {
                       title: 'Log Mood',
                       color: Color(0xFF9C27B0),
                       onTap: () {
-                        // Navigate to mood logging
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const MoodLogScreen(),
+                          ),
+                        );
                       },
                     ),
                   ),

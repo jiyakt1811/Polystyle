@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'mood_log_screen.dart';
+import '../widgets/affirmations_popup.dart';
 
 class MindScreen extends StatefulWidget {
   const MindScreen({super.key});
@@ -11,6 +13,7 @@ class MindScreen extends StatefulWidget {
 class _MindScreenState extends State<MindScreen> {
   String _currentMood = 'Happy';
   final List<String> _moods = ['Happy', 'Calm', 'Stressed', 'Anxious', 'Energetic', 'Tired'];
+  final GlobalKey<AffirmationsPopupState> _affirmationsKey = GlobalKey<AffirmationsPopupState>();
   final List<JournalEntry> _journalEntries = [
     JournalEntry(
       date: DateTime.now().subtract(const Duration(days: 1)),
@@ -36,7 +39,9 @@ class _MindScreenState extends State<MindScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.textColor),
       ),
-      body: SafeArea(
+      body: Stack(
+        children: [
+          SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -103,52 +108,50 @@ class _MindScreenState extends State<MindScreen> {
               
               // Daily affirmation
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.favorite,
-                            color: Color(0xFFE91E63),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Daily Affirmation',
-                            style: AppTheme.bodyStyle.copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                child: InkWell(
+                  onTap: () {
+                    _affirmationsKey.currentState?.showAffirmation();
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.favorite,
+                              color: AppTheme.primaryColor,
+                              size: 24,
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '"I am strong, capable, and worthy of love and care. My body is working with me, not against me."',
-                        style: AppTheme.bodyStyle.copyWith(
-                          fontSize: 16,
-                          fontStyle: FontStyle.italic,
-                          color: Color(0xFFE91E63),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Daily Affirmation',
+                              style: AppTheme.bodyStyle.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              color: AppTheme.lightTextColor,
+                              size: 16,
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            _getNewAffirmation();
-                          },
-                          child: const Text('Get New Affirmation'),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: Color(0xFFE91E63)),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Tap to get your daily dose of positivity and self-love',
+                          style: AppTheme.bodyStyle.copyWith(
+                            fontSize: 14,
+                            color: AppTheme.lightTextColor,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -165,7 +168,11 @@ class _MindScreenState extends State<MindScreen> {
                   ),
                   ElevatedButton.icon(
                     onPressed: () {
-                      _showJournalDialog();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const MoodLogScreen(),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.edit),
                     label: const Text('New Entry'),
@@ -362,6 +369,8 @@ class _MindScreenState extends State<MindScreen> {
             ],
           ),
         ),
+          AffirmationsPopup(key: _affirmationsKey),
+        ],
       ),
     );
   }
@@ -570,24 +579,7 @@ class _MindScreenState extends State<MindScreen> {
     );
   }
 
-  void _getNewAffirmation() {
-    final affirmations = [
-      '"I am worthy of love, respect, and care exactly as I am."',
-      '"My body is strong and capable of healing and growth."',
-      '"I choose to be kind to myself today and every day."',
-      '"I am not defined by my condition, but by my strength and resilience."',
-      '"Every step I take towards self-care is a victory."',
-    ];
-    
-    final randomAffirmation = affirmations[DateTime.now().millisecond % affirmations.length];
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('New affirmation: $randomAffirmation'),
-        backgroundColor: Color(0xFFE91E63),
-      ),
-    );
-  }
+
 
   void _showJournalDialog() {
     showDialog(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'food_log_screen.dart';
 
 class FoodScreen extends StatefulWidget {
   const FoodScreen({super.key});
@@ -90,7 +91,11 @@ class _FoodScreenState extends State<FoodScreen> {
                   ),
                   ElevatedButton.icon(
                     onPressed: () {
-                      _showAddFoodDialog();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FoodLogScreen(),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Add Food'),
