@@ -1,0 +1,2 @@
+This is a placeholder file for the assets/images directory.
+You can add your own images here for the onboarding screens. 
