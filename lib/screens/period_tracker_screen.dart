@@ -523,20 +523,25 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: DateTime.now(),
-                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                            lastDate: DateTime.now(),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _selectedStartDate = date;
-                              // Reset end date if it's before the new start date
-                              if (_selectedEndDate != null && _selectedEndDate!.isBefore(date)) {
-                                _selectedEndDate = null;
-                              }
-                            });
+                          try {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime.now().subtract(const Duration(days: 730)), // Allow 2 years back
+                              lastDate: DateTime.now().add(const Duration(days: 30)), // Allow 1 month forward
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _selectedStartDate = date;
+                                // Reset end date if it's before the new start date
+                                if (_selectedEndDate != null && _selectedEndDate!.isBefore(date)) {
+                                  _selectedEndDate = null;
+                                }
+                              });
+                            }
+                          } catch (e) {
+                            // Fallback: Show a simple date input dialog
+                            _showDateInputDialog(true);
                           }
                         },
                         child: Container(
@@ -592,16 +597,21 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
                             return;
                           }
                           
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _selectedStartDate!,
-                            firstDate: _selectedStartDate!,
-                            lastDate: DateTime.now(),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _selectedEndDate = date;
-                            });
+                          try {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedStartDate!,
+                              firstDate: _selectedStartDate!,
+                              lastDate: DateTime.now().add(const Duration(days: 30)), // Allow 1 month forward
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _selectedEndDate = date;
+                              });
+                            }
+                          } catch (e) {
+                            // Fallback: Show a simple date input dialog
+                            _showDateInputDialog(false);
                           }
                         },
                         child: Container(
@@ -809,11 +819,21 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
   }
 
   Future<void> _savePeriodLog(StateSetter setDialogState) async {
-    if (_selectedStartDate == null || _selectedEndDate == null) {
+    if (_selectedStartDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select both start and end dates'),
-          backgroundColor: Colors.red,
+          content: Text('Please select a start date'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedEndDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select an end date'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -824,6 +844,18 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
         const SnackBar(
           content: Text('End date cannot be before start date'),
           backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Check if period duration is reasonable (1-14 days)
+    final duration = _calculateDuration(_selectedStartDate!, _selectedEndDate!);
+    if (duration > 14) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Period duration seems unusually long. Please check your dates.'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -892,6 +924,107 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
 
   int _calculateDuration(DateTime startDate, DateTime endDate) {
     return endDate.difference(startDate).inDays + 1; // +1 to include both start and end dates
+  }
+
+  void _showDateInputDialog(bool isStartDate) {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(isStartDate ? 'Enter Start Date' : 'Enter End Date'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Please enter the date in DD/MM/YYYY format',
+                  style: AppTheme.bodyStyle.copyWith(fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    labelText: 'Date',
+                    hintText: 'DD/MM/YYYY',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a date';
+                    }
+                    try {
+                      final parts = value.split('/');
+                      if (parts.length != 3) {
+                        return 'Please use DD/MM/YYYY format';
+                      }
+                      final day = int.parse(parts[0]);
+                      final month = int.parse(parts[1]);
+                      final year = int.parse(parts[2]);
+                      final date = DateTime(year, month, day);
+                      
+                      // Validate date range
+                      final now = DateTime.now();
+                      final minDate = now.subtract(const Duration(days: 730));
+                      final maxDate = now.add(const Duration(days: 30));
+                      
+                      if (date.isBefore(minDate) || date.isAfter(maxDate)) {
+                        return 'Date must be within 2 years ago to 1 month from now';
+                      }
+                      
+                      if (!isStartDate && _selectedStartDate != null && date.isBefore(_selectedStartDate!)) {
+                        return 'End date cannot be before start date';
+                      }
+                      
+                      return null;
+                    } catch (e) {
+                      return 'Invalid date format';
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final parts = controller.text.split('/');
+                  final day = int.parse(parts[0]);
+                  final month = int.parse(parts[1]);
+                  final year = int.parse(parts[2]);
+                  final date = DateTime(year, month, day);
+                  
+                  setState(() {
+                    if (isStartDate) {
+                      _selectedStartDate = date;
+                      if (_selectedEndDate != null && _selectedEndDate!.isBefore(date)) {
+                        _selectedEndDate = null;
+                      }
+                    } else {
+                      _selectedEndDate = date;
+                    }
+                  });
+                  
+                  Navigator.of(context).pop();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+              ),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   int _calculateAverageCycleLength() {
